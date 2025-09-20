@@ -1,197 +1,179 @@
 package registration.controller;
 
 import registration.model.*;
-import registration.View.AdminDashboardPanel; // Import aDDMIN PANEL
+import registration.View.AdminDashboardPanel;
 import registration.View.LoginPanel;
 import registration.View.MainFrame;
 import registration.View.StudentDashboardPanel;
-
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-public class AppController {
-    // Model
-     private final DatabaseService dbService; // ตัวจัดการไฟล์ CSV
+public class AppController { // คลาสตัวควบคุมหลัก
+    private final DatabaseService dbService; // ตัวจัดการไฟล์
     private final RegistrationService regService; // ตัวจัดการกฎการลงทะเบียน
-    private List<Student> students; // เก็บรายชื่อนักเรียนทั้งหมด
-    private List<Subject> subjects; // เก็บรายวิชาทั้งหมด
-    private List<Registration> registrations; // เก็บข้อมูลการลงทะเบียนทั้งหมด
+    private List<Student> students; // ลิสต์เก็บข้อมูลนักเรียน
+    private List<Subject> subjects; // ลิสต์เก็บข้อมูลวิชา
+    private List<Registration> registrations; // ลิสต์เก็บข้อมูลการลงทะเบียน
     private Student currentStudent; // เก็บข้อมูลนักเรียนที่ล็อกอินอยู่
 
-    // View
-     private MainFrame mainFrame; // หน้าต่างหลักของโปรแกรม
-    private LoginPanel loginPanel; // หน้าจอ Login
+    private MainFrame mainFrame; // หน้าต่างหลัก
+    private LoginPanel loginPanel; // หน้าจอลงชื่อเข้าใช้
     private StudentDashboardPanel studentDashboardPanel; // หน้าจอของนักเรียน
     private AdminDashboardPanel adminDashboardPanel; // หน้าจอของแอดมิน
-    
-    public AppController() { //สร้างอ็อบเจกต์ Service ที่ต้องใช้
+
+    public AppController() { // สร้างตัวควบคุม
         this.dbService = new DatabaseService();
         this.regService = new RegistrationService();
     }
 
-    public void start() {
-        //  โหลดข้อมูลทั้งหมดจากไฟล์ CSV มาเก็บใน List
-        this.students = dbService.loadStudents();
-        this.subjects = dbService.loadSubjects();
-        this.registrations = dbService.loadRegistrations();
+    public void start() { // เริ่มต้นการทำงาน
+        this.students = dbService.loadStudents(); // โหลดข้อมูลนักเรียน
+        this.subjects = dbService.loadSubjects(); // โหลดข้อมูลวิชา
+        this.registrations = dbService.loadRegistrations(); // โหลดข้อมูลการลงทะเบียน
 
-        // สร้างอ็อบเจกต์ของหน้าจอต่างๆ
-        this.mainFrame = new MainFrame();
-        this.loginPanel = new LoginPanel();
-        this.studentDashboardPanel = new StudentDashboardPanel();
-        this.adminDashboardPanel = new AdminDashboardPanel(); // สร้าง instance ของ Admin View
+        this.mainFrame = new MainFrame(); // สร้างหน้าต่างหลัก
+        this.loginPanel = new LoginPanel(); // สร้างหน้าจอลงชื่อเข้าใช้
+        this.studentDashboardPanel = new StudentDashboardPanel(); // สร้างหน้าจอของนักเรียน
+        this.adminDashboardPanel = new AdminDashboardPanel(); // สร้างหน้าจอของแอดมิน
 
-        // Add panels to the frame
-        mainFrame.addPanel(loginPanel, "LOGIN");
-        mainFrame.addPanel(studentDashboardPanel, "STUDENT_DASHBOARD");
-        mainFrame.addPanel(adminDashboardPanel, "ADMIN_DASHBOARD"); // เพิ่ม Admin panel เข้าไปใน frame
+        mainFrame.addPanel(loginPanel, "LOGIN"); // เพิ่มหน้าจอลงชื่อเข้าใช้
+        mainFrame.addPanel(studentDashboardPanel, "STUDENT_DASHBOARD"); // เพิ่มหน้าจอของนักเรียน
+        mainFrame.addPanel(adminDashboardPanel, "ADMIN_DASHBOARD"); // เพิ่มหน้าจอของแอดมิน
 
-        // Attach event listeners
-        attachListeners();
+        attachListeners(); // เชื่อมต่อการทำงานของปุ่มต่างๆ
 
-        // Show the initial panel and make the frame visible
-        mainFrame.switchToPanel("LOGIN");
-        mainFrame.setVisible(true);
+        mainFrame.switchToPanel("LOGIN"); // แสดงหน้าจอลงชื่อเข้าใช้เป็นหน้าแรก
+        mainFrame.setVisible(true); // แสดงหน้าต่างโปรแกรม
     }
 
-    private void attachListeners() {
-        // --- Common Listeners ---
-        loginPanel.addLoginListener(e -> handleLogin());
+    private void attachListeners() { // เชื่อมต่อการทำงาน
+        loginPanel.addLoginListener(e -> handleLogin()); // เมื่อปุ่มล็อกอินถูกกด
 
-        // --- Student Listeners ---
-        studentDashboardPanel.addRegisterListener(e -> handleRegistration());
-        studentDashboardPanel.addLogoutListener(e -> handleLogout());
-        studentDashboardPanel.getAvailableCoursesList().addListSelectionListener(e -> {
-            if (!e.getValueIsAdjusting()) {
-                Subject selected = studentDashboardPanel.getSelectedAvailableCourse();
-                studentDashboardPanel.setCourseDetails(selected);
+        studentDashboardPanel.addRegisterListener(e -> handleRegistration()); // เมื่อปุ่มลงทะเบียนถูกกด
+        studentDashboardPanel.addLogoutListener(e -> handleLogout()); // เมื่อปุ่มออกจากระบบถูกกด
+        studentDashboardPanel.getAvailableCoursesList().addListSelectionListener(e -> { // เมื่อมีการเลือกวิชาในลิสต์
+            if (!e.getValueIsAdjusting()) { 
+                Subject selected = studentDashboardPanel.getSelectedAvailableCourse(); // ดึงวิชาที่เลือก
+                studentDashboardPanel.setCourseDetails(selected); // แสดงรายละเอียดวิชา
             }
         });
 
-        // --- Admin Listeners ---
-        adminDashboardPanel.getStudentList().addListSelectionListener(e -> {
+        adminDashboardPanel.getSubjectList().addListSelectionListener(e -> { // เมื่อแอดมินเลือกวิชาในลิสต์
             if (!e.getValueIsAdjusting()) {
-                updateAdminRegistrationsView();
+                updateAdminRegistrationsForSubjectView(); // อัปเดตรายชื่อนักเรียน
             }
         });
-        adminDashboardPanel.addSaveGradeListener(e -> handleSaveGrade());
-        adminDashboardPanel.addLogoutListener(e -> handleLogout());
+        adminDashboardPanel.addSaveGradeListener(e -> handleSaveGrade()); // เมื่อปุ่มบันทึกเกรดถูกกด
+        adminDashboardPanel.addLogoutListener(e -> handleLogout()); // เมื่อปุ่มออกจากระบบถูกกด
     }
 
-    private void handleLogin() {
-        String userId = loginPanel.getStudentId();
+    private void handleLogin() { // จัดการการลงชื่อเข้าใช้
+        String userId = loginPanel.getStudentId(); // ดึงรหัสที่ผู้ใช้กรอก
         
-        // --- Admin Login ---
-        if ("admin".equalsIgnoreCase(userId)) {
-            updateAdminDashboard();
-            mainFrame.switchToPanel("ADMIN_DASHBOARD");
+        if ("admin".equalsIgnoreCase(userId)) { // ตรวจสอบว่าเป็นแอดมินหรือไม่
+            updateAdminDashboard(); // เตรียมข้อมูลหน้าแอดมิน
+            mainFrame.switchToPanel("ADMIN_DASHBOARD"); // สลับไปหน้าแอดมิน
             return;
         }
 
-        // --- Student Login ---
-        Optional<Student> studentOpt = students.stream()
+        Optional<Student> studentOpt = students.stream() // ค้นหานักเรียนจากรหัส
                 .filter(s -> s.getStudentId().equals(userId))
                 .findFirst();
 
-        if (studentOpt.isPresent()) {
-            currentStudent = studentOpt.get();
-            updateStudentDashboard();
-            mainFrame.switchToPanel("STUDENT_DASHBOARD");
-        } else {
-            mainFrame.showErrorMessage("Login Failed. User ID not found.");
+        if (studentOpt.isPresent()) { // ถ้าเจอนักเรียน
+            currentStudent = studentOpt.get(); // เก็บข้อมูลนักเรียนไว้
+            updateStudentDashboard(); // เตรียมข้อมูลหน้านักเรียน
+            mainFrame.switchToPanel("STUDENT_DASHBOARD"); // สลับไปหน้านักเรียน
+        } else { // ถ้าไม่เจอ
+            mainFrame.showErrorMessage("Login Failed. User ID not found."); // แสดงข้อความผิดพลาด
         }
     }
 
-    private void handleLogout() {
-        currentStudent = null;
-        mainFrame.switchToPanel("LOGIN");
+    private void handleLogout() { // จัดการการออกจากระบบ
+        currentStudent = null; // ล้างข้อมูลนักเรียนที่ล็อกอินอยู่
+        mainFrame.switchToPanel("LOGIN"); // กลับไปหน้าลงชื่อเข้าใช้
     }
 
-    // --- Student Methods ---
-
-    private void handleRegistration() {
-        Subject selectedSubject = studentDashboardPanel.getSelectedAvailableCourse();
-        if (selectedSubject == null) {
-            mainFrame.showErrorMessage("Please select a course to register.");
+    private void handleRegistration() { // จัดการการลงทะเบียน
+        Subject selectedSubject = studentDashboardPanel.getSelectedAvailableCourse(); // ดึงวิชาที่เลือก
+        if (selectedSubject == null) { // ถ้ายังไม่ได้เลือก
+            mainFrame.showErrorMessage("Please select a course to register."); // แสดงข้อความเตือน
             return;
         }
-        String result = regService.registerStudentForSubject(currentStudent, selectedSubject, registrations);
-        if (result.startsWith("Registration successful")) {
-            mainFrame.showInfoMessage(result);
-            dbService.saveSubjects(subjects);
-            dbService.saveRegistrations(registrations);
-            updateStudentDashboard();
-        } else {
-            mainFrame.showErrorMessage(result);
+        String result = regService.registerStudentForSubject(currentStudent, selectedSubject, registrations); // เรียกใช้บริการเพื่อลงทะเบียน
+        
+        if (result.startsWith("Registration successful")) { // ถ้าลงทะเบียนสำเร็จ
+            mainFrame.showInfoMessage(result); // แสดงข้อความสำเร็จ
+            dbService.saveSubjects(subjects); // บันทึกข้อมูลวิชา
+            dbService.saveRegistrations(registrations); // บันทึกข้อมูลการลงทะเบียน
+            updateStudentDashboard(); // อัปเดตหน้าจอ
+        } else { // ถ้าไม่สำเร็จ
+            mainFrame.showErrorMessage(result); // แสดงข้อความผิดพลาด
         }
     }
 
-    private void updateStudentDashboard() {
-        if (currentStudent == null) return;
-        studentDashboardPanel.setWelcomeMessage(currentStudent.getFirstName());
-        List<String> registeredSubjectIds = registrations.stream()
+    private void updateStudentDashboard() { // อัปเดตข้อมูลหน้านักเรียน
+        if (currentStudent == null) return; // ถ้าไม่มีใครล็อกอินให้ออก
+        studentDashboardPanel.setWelcomeMessage(currentStudent.getFirstName()); // ตั้งข้อความต้อนรับ
+        
+        List<String> registeredSubjectIds = registrations.stream() // ค้นหารหัสวิชาที่ลงทะเบียนไปแล้ว
                 .filter(r -> r.getStudentId().equals(currentStudent.getStudentId()))
                 .map(Registration::getSubjectId)
                 .collect(Collectors.toList());
-        List<Subject> availableSubjects = subjects.stream()
+        
+        List<Subject> availableSubjects = subjects.stream() // กรองวิชาที่ยังไม่ได้ลงทะเบียน
                 .filter(s -> !registeredSubjectIds.contains(s.getSubjectId()))
                 .collect(Collectors.toList());
-        List<Subject> registeredSubjects = subjects.stream()
+        
+        List<Subject> registeredSubjects = subjects.stream() // กรองวิชาที่ลงทะเบียนไปแล้ว
                 .filter(s -> registeredSubjectIds.contains(s.getSubjectId()))
                 .collect(Collectors.toList());
-        studentDashboardPanel.setAvailableCourses(availableSubjects);
-        studentDashboardPanel.setRegisteredCourses(registeredSubjects);
-        studentDashboardPanel.setCourseDetails(null);
+        
+        studentDashboardPanel.setAvailableCourses(availableSubjects); // ส่งข้อมูลวิชาที่ลงได้ไปแสดง
+        studentDashboardPanel.setRegisteredCourses(registeredSubjects); // ส่งข้อมูลวิชาที่ลงแล้วไปแสดง
+        studentDashboardPanel.setCourseDetails(null); // ล้างรายละเอียดวิชาที่แสดงอยู่
     }
 
-    // --- Admin Methods ---
-
-    private void updateAdminDashboard() {
-        adminDashboardPanel.setStudents(students);
-        updateAdminRegistrationsView(); // Initially show no registrations selected
+    private void updateAdminDashboard() { // อัปเดตข้อมูลหน้าแอดมิน
+        adminDashboardPanel.setSubjects(subjects); // ส่งรายชื่อวิชาทั้งหมดไปแสดง
+        updateAdminRegistrationsForSubjectView(); // อัปเดตรายชื่อนักเรียน
     }
 
-    private void updateAdminRegistrationsView() {
-        Student selectedStudent = adminDashboardPanel.getSelectedStudent();
-        if (selectedStudent == null) {
-            adminDashboardPanel.setRegistrations(List.of(), Map.of()); // Clear list if no student selected
+    private void updateAdminRegistrationsForSubjectView() { // อัปเดตรายชื่อนักเรียนในหน้าแอดมิน
+        Subject selectedSubject = adminDashboardPanel.getSelectedSubject(); // ดึงวิชาที่แอดมินเลือก
+        if (selectedSubject == null) { // ถ้ายังไม่ได้เลือก
+            adminDashboardPanel.setRegistrationsForSubject(List.of(), Map.of()); // แสดงลิสต์ว่าง
             return;
         }
-        // Get all registrations for the selected student
-        List<Registration> studentRegs = registrations.stream()
-                .filter(r -> r.getStudentId().equals(selectedStudent.getStudentId()))
+        
+        List<Registration> subjectRegs = registrations.stream() // ค้นหาการลงทะเบียนของวิชานั้น
+                .filter(r -> r.getSubjectId().equals(selectedSubject.getSubjectId()))
                 .collect(Collectors.toList());
 
-        // Create a map of SubjectID -> SubjectName for easy lookup in the view
-        Map<String, String> subjectNameMap = subjects.stream()
-                .collect(Collectors.toMap(Subject::getSubjectId, Subject::getSubjectName));
+        Map<String, Student> studentMap = students.stream() // สร้างแผนที่สำหรับค้นหาข้อมูลนักเรียน
+                .collect(Collectors.toMap(Student::getStudentId, student -> student));
 
-        adminDashboardPanel.setRegistrations(studentRegs, subjectNameMap);
+        adminDashboardPanel.setRegistrationsForSubject(subjectRegs, studentMap); // ส่งข้อมูลไปแสดง
     }
     
-    private void handleSaveGrade() {
-        Registration selectedReg = adminDashboardPanel.getSelectedRegistration();
-        if (selectedReg == null) {
-            mainFrame.showErrorMessage("Please select a student and a registered course.");
+    private void handleSaveGrade() { // จัดการการบันทึกเกรด
+        Registration selectedReg = adminDashboardPanel.getSelectedRegistration(); // ดึงรายการที่เลือก
+        if (selectedReg == null) { // ถ้ายังไม่ได้เลือก
+            mainFrame.showErrorMessage("Please select a subject and then a student."); // แสดงข้อความเตือน
             return;
         }
-        String grade = adminDashboardPanel.getGradeInput().trim().toUpperCase();
-        if (grade.isEmpty()) {
-            mainFrame.showErrorMessage("Please enter a grade.");
+        String grade = adminDashboardPanel.getGradeInput().trim().toUpperCase(); // ดึงเกรดที่กรอก
+        if (grade.isEmpty()) { // ถ้าไม่ได้กรอก
+            mainFrame.showErrorMessage("Please enter a grade."); // แสดงข้อความเตือน
             return;
         }
         
-        // Update model
-        selectedReg.setGrade(grade);
+        selectedReg.setGrade(grade); // กำหนดเกรดในข้อมูล
+        dbService.saveRegistrations(registrations); // บันทึกข้อมูลลงไฟล์
+        mainFrame.showInfoMessage("Grade updated successfully!"); // แสดงข้อความสำเร็จ
         
-        // Save to CSV
-        dbService.saveRegistrations(registrations);
-        
-        mainFrame.showInfoMessage("Grade updated successfully!");
-        
-        // Refresh the view to show the new grade
-        updateAdminRegistrationsView();
+        updateAdminRegistrationsForSubjectView(); // อัปเดตหน้าจอ
     }
 }

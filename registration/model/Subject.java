@@ -1,55 +1,50 @@
 package registration.model;
 
-public class Subject {
-    private String subjectId;
-    private String subjectName;
-    private int credits;
-    private String instructorName;
-    private String prerequisiteSubjectId; // Can be empty
-    private int maxCapacity; // -1 for unlimited
-    private int currentEnrollment;
+public class Subject { // คลาสสำหรับเก็บข้อมูลรายวิชา
+    private String subjectId; // เก็บข้อมูลรหัสวิชา
+    private String subjectName; // เก็บข้อมูลชื่อวิชา
+    private int credits; // เก็บข้อมูลหน่วยกิต
+    private String instructorName; // เก็บข้อมูลชื่อผู้สอน
+    private String prerequisiteSubjectId; // เก็บข้อมูลวิชาบังคับก่อน
+    private int maxCapacity; // เก็บข้อมูลจำนวนรับสูงสุด
+    private int currentEnrollment; // เก็บข้อมูลจำนวนคนลงทะเบียน
 
-    public Subject(String subjectId, String subjectName, int credits, String instructorName, String prerequisiteSubjectId, int maxCapacity, int currentEnrollment) {
+    public Subject(String subjectId, String subjectName, int credits, String instructorName, String prerequisiteSubjectId, int maxCapacity, int currentEnrollment) { // สร้างobjectวิชา
         this.subjectId = subjectId;
         this.subjectName = subjectName;
         this.credits = credits;
         this.instructorName = instructorName;
-        this.prerequisiteSubjectId = prerequisiteSubjectId.isEmpty() ? null : prerequisiteSubjectId;
+        this.prerequisiteSubjectId = prerequisiteSubjectId.isEmpty() ? null : prerequisiteSubjectId; // ถ้าไม่มีวิชาบังคับก่อนให้เป็นnull
         this.maxCapacity = maxCapacity;
         this.currentEnrollment = currentEnrollment;
     }
 
-    // --- Getters and Setters ---
-    public String getSubjectId() { return subjectId; }
-    public String getSubjectName() { return subjectName; }
-    public String getPrerequisiteSubjectId() { return prerequisiteSubjectId; }
-    public int getMaxCapacity() { return maxCapacity; }
-    public int getCurrentEnrollment() { return currentEnrollment; }
-    public void setCurrentEnrollment(int currentEnrollment) { this.currentEnrollment = currentEnrollment; }
+    public String getSubjectId() { return subjectId; } // ดึงรหัสวิชา
+    public String getSubjectName() { return subjectName; } // ดึงชื่อวิชา
+    public int getCredits() { return credits; } // ดึงหน่วยกิต
+    public String getInstructorName() { return instructorName; } // ดึงชื่อผู้สอน
+    public String getPrerequisiteSubjectId() { return prerequisiteSubjectId; } // ดึงวิชาบังคับก่อน
+    public int getMaxCapacity() { return maxCapacity; } // ดึงจำนวนรับสูงสุด
+    public int getCurrentEnrollment() { return currentEnrollment; } // ดึงจำนวนคนลงทะเบียน
+    public void setCurrentEnrollment(int currentEnrollment) { this.currentEnrollment = currentEnrollment; } // กำหนดจำนวนคนลงทะเบียน
 
-    // ***** เพิ่ม 2 เมธอดนี้เข้าไป *****
-    public int getCredits() { return credits; }
-    public String getInstructorName() { return instructorName; }
-    // *******************************
-
-    public boolean isFull() {
-        if (maxCapacity == -1) {
-            return false; // Unlimited capacity
+    public boolean isFull() { // ตรวจสอบว่าวิชาเต็มหรือยัง
+        if (maxCapacity == -1) { // ถ้าจำนวนรับไม่จำกัด
+            return false; // คืนค่าว่าไม่เต็ม
         }
-        return currentEnrollment >= maxCapacity;
+        return currentEnrollment >= maxCapacity; // คืนค่าผลการเปรียบเทียบ
     }
     
-    public void incrementEnrollment() {
+    public void incrementEnrollment() { // เพิ่มจำนวนคนลงทะเบียน
         this.currentEnrollment++;
     }
 
     @Override
     public String toString() {
-        // This method is used by the JList in the GUI to display the subject name.
         return String.format("[%s] %s", subjectId, subjectName);
     }
     
-    public String toCsvString() {
+    public String toCsvString() { // แปลงข้อมูลกลับเป็นรูปแบบCSV
         return String.join(",", subjectId, subjectName, String.valueOf(credits), instructorName, prerequisiteSubjectId == null ? "" : prerequisiteSubjectId, String.valueOf(maxCapacity), String.valueOf(currentEnrollment));
     }
 }

@@ -1,26 +1,24 @@
 package registration.model;
 
+public class Registration { // คลาสสำหรับเก็บข้อมูลการลงทะเบียน
+    private String studentId; // เก็บรหัสนักเรียนที่ลงทะเบียน
+    private String subjectId; // เก็บรหัสวิชาที่ถูกลงทะเบียน
+    private String grade; // เก็บเกรดที่ได้รับ
 
-public class Registration {
-    private String studentId;
-    private String subjectId;
-    private String grade;
-
-    public Registration(String studentId, String subjectId, String grade) {
+    public Registration(String studentId, String subjectId, String grade) { // สร้างobjectการลงทะเบียน
         this.studentId = studentId;
         this.subjectId = subjectId;
-        this.grade = grade.isEmpty() ? null : grade;
+        this.grade = grade.isEmpty() ? null : grade; // ถ้าเกรดว่างให้เก็บเป็นnull
     }
 
-    // Getters
-    public String getStudentId() { return studentId; }
-    public String getSubjectId() { return subjectId; }
-    public String getGrade() { return grade; }
-    
-    public void setGrade(String grade) {
+    public String getStudentId() { return studentId; } // ดึงรหัสนักเรียน
+    public String getSubjectId() { return subjectId; } // ดึงรหัสวิชา
+    public String getGrade() { return grade; } // ดึงเกรด
+    public void setGrade(String grade) { // กำหนดค่าเกรด
         this.grade = grade;
     }
-    public String toCsvString() {
+
+    public String toCsvString() { // แปลงข้อมูลกลับเป็นรูปแบบซีเอสวี
         return String.join(",", studentId, subjectId, grade == null ? "" : grade);
     }
 }
