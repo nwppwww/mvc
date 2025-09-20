@@ -1,0 +1,11 @@
+subjectId,subjectName,credits,instructorName,prerequisiteSubjectId,maxCapacity,currentEnrollment
+0550101,Introduction to Programming,3,Prof. Alan Turing,,50,49
+0550102,Advanced Programming,3,Prof. Alan Turing,0550101,50,10
+0550211,Data Structures,3,Dr. Ada Lovelace,0550101,40,5
+9069101,Critical Thinking,3,Dr. Grace Hopper,,100,90
+9069102,Art Appreciation,3,Prof. Don Norman,,-1,150
+0550221,Database Systems,3,Prof. Edgar Codd,,30,30
+0550301,Web Development,3,Dr. Tim Berners-Lee,0550102,25,0
+9069201,Environmental Science,3,Dr. Rachel Carson,,-1,80
+0550333,Software Engineering,3,Prof. Martin Fowler,0550211,40,2
+9069210,Public Speaking,3,Dr. Dale Carnegie,,35,35
